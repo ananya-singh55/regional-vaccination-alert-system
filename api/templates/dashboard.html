@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaccination Command Center</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #34495e; }
+        input[type="text"], input[type="number"], input[type="email"], textarea { width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; box-sizing: border-box; }
+        .row { display: flex; gap: 15px; }
+        .col { flex: 1; }
+        button { background-color: #e74c3c; color: white; border: none; padding: 12px 20px; cursor: pointer; border-radius: 5px; font-size: 16px; width: 100%; font-weight: bold; transition: 0.3s; }
+        button:hover { background-color: #c0392b; }
+        #result { margin-top: 20px; padding: 15px; border-radius: 5px; display: none; font-weight: bold; text-align: center; }
+        .high-risk { background-color: #fadbd8; color: #c0392b; border: 1px solid #e74c3c; }
+        .low-risk { background-color: #d5f5e3; color: #27ae60; border: 1px solid #2ecc71; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Regional Vaccination Command Center</h2>
+    
+    <form id="analyzeForm">
+        <h3>1. District Health Statistics</h3>
+        <div class="row">
+            <div class="col">
+                <div class="form-group"><label>District Name</label><input type="text" id="district_name" required></div>
+                <div class="form-group"><label>Total Population</label><input type="number" id="population" required></div>
+                <div class="form-group"><label>BCG Starts (Infants)</label><input type="number" id="bcg" required></div>
+            </div>
+            <div class="col">
+                <div class="form-group"><label>Fully Immunized (T_FI_9_11)</label><input type="number" id="t_fi" required></div>
+                <div class="form-group"><label>ASHA Worker Sessions</label><input type="number" id="is_asha" required></div>
+            </div>
+        </div>
+
+        <h3>2. Intervention Contacts</h3>
+        <div class="form-group">
+            <label>Official Department Email (For Alerts)</label>
+            <input type="email" id="official_email" placeholder="health_officer@gov.in" required>
+        </div>
+        <div class="form-group">
+            <label>Registered Parent Phone Numbers [For Whatsapp Alerts] (Separated by commas, no spaces or special symbols, prefixed by country code)</label>
+            <textarea id="phone_numbers" rows="3" placeholder="91XXXXXXXXXX, 91XXXXXXXXXX, ..." required></textarea>
+        </div>
+
+        <button type="submit" id="submitBtn">Analyze Risk & Trigger Actions</button>
+    </form>
+
+    <div id="result"></div>
+</div>
+
+<script>
+document.getElementById('analyzeForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const resultDiv = document.getElementById('result');
+    
+    btn.innerText = "Analyzing & Sending Alerts...";
+    btn.disabled = true;
+
+    const payload = {
+        district_name: document.getElementById('district_name').value,
+        POPULATION: parseFloat(document.getElementById('population').value),
+        BCG: parseFloat(document.getElementById('bcg').value),
+        T_FI_9_11: parseFloat(document.getElementById('t_fi').value),
+        IS_ASHA: parseFloat(document.getElementById('is_asha').value),
+        official_email: document.getElementById('official_email').value,
+        phone_numbers: document.getElementById('phone_numbers').value
+    };
+
+    try {
+        const response = await fetch('/analyze', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        
+        resultDiv.style.display = 'block';
+        if(data.risk_level === 'HIGH') {
+            resultDiv.className = 'high-risk';
+            resultDiv.innerHTML = `⚠️ HIGH RISK DETECTED (${(data.probability * 100).toFixed(1)}%).<br>Interventions Triggered: ${data.actions_taken}`;
+        } else {
+            resultDiv.className = 'low-risk';
+            resultDiv.innerHTML = `✅ LOW RISK (${(data.probability * 100).toFixed(1)}%).<br>No emergency intervention required.`;
+        }
+    } catch (error) {
+        alert("Error connecting to Command Center.");
+    } finally {
+        btn.innerText = "Analyze Risk & Trigger Actions";
+        btn.disabled = false;
+    }
+});
+</script>
+
+</body>
+</html>

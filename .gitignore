@@ -1,0 +1,38 @@
+# --- Security & Credentials ---
+# Never upload your API keys or passwords
+.env
+
+# --- Python Environment & Cache ---
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+.pytest_cache/
+
+# --- Node.js (WhatsApp Service) ---
+# Do not upload dependencies; others will run 'npm install'
+node_modules/
+npm-debug.log*
+
+# --- WhatsApp Session Data (CRITICAL) ---
+# These contain your private login tokens and session keys
+.wwebjs_auth/
+.wwebjs_cache/
+*.zip
+
+# --- Project Data & Models ---
+# Large Excel/CSV files and ML models are often excluded to keep the repo light
+data/*.xls
+data/*.xlsx
+
+# --- Logs & Privacy ---
+# Prevent leaking phone numbers or email addresses found in your logs
+outputs/logs/*.log
+outputs/visuals/*.png
+
+# --- OS & IDE Specific ---
+.vscode/
+.DS_Store
+Thumbs.db
